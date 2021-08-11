@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">FlowOfThought</string>
+    <string name="bubble_label">Bubble</string>
+    <string name="action_settings">Settings</string>
+
+    <!-- Strings used for fragments for navigation -->
+    <string name="Main_fragment_label">First Fragment</string>
+    <string name="history_fragment_label">Second Fragment</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+
+    <string name="hello_first_fragment">Hello first fragment</string>
+    <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
+    <string name="hint_edittext_content">Enter your thoughts.</string>
+    <string name="text_button_save">save</string>
+    <string name="enter_your_thought">Enter your thought</string>
+    <string name="title_activity_compose">ComposeActivity</string>
+    <string name="doubletap_to_delete_thought">Cliquez une deuxième fois pour supprimer la pensé !</string>
+    <string name="edit_title_hint">What could be this title ...</string>
+</resources>

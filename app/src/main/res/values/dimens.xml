@@ -1,0 +1,11 @@
+<resources>
+    <dimen name="fab_margin">16dp</dimen>
+    <dimen name="group_corners_radius">10dp</dimen>
+    <dimen name="bullet_radius">5dp</dimen>
+    <dimen name="bullet_gap">10dp</dimen>
+    <dimen name="quote_width">5dp</dimen>
+    <dimen name="quote_cap">2dp</dimen>
+    <dimen name="layout_edit_padding">3dp</dimen>
+    <dimen name="layout_edit_button_margin_left">5dp</dimen>
+    <dimen name="layout_management_button_margin_top">10dp</dimen>
+</resources>
