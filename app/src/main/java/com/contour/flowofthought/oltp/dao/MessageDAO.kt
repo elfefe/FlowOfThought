@@ -15,6 +15,9 @@ interface MessageDAO {
     @Query("SELECT * FROM Message WHERE thoughtId = :id")
     fun getLiveAllByThoughtId(id: Long): LiveData<List<Message>>
 
+    @Query("SELECT * FROM Message WHERE thoughtId = :id")
+    fun getAllByThoughtId(id: Long): List<Message>
+
     @Query("SELECT * FROM Message GROUP BY thoughtId ORDER BY thoughtId DESC, id DESC")
     fun getLiveFirstByThoughtId(): LiveData<List<Message>>
 

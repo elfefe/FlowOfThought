@@ -1,6 +1,7 @@
 package com.contour.flowofthought.mvvm.viewmodel
 
 import androidx.lifecycle.*
+import com.contour.flowofthought.custom.log
 import com.contour.flowofthought.oltp.model.Image
 import com.contour.flowofthought.oltp.model.Message
 import com.contour.flowofthought.oltp.model.Thought
@@ -15,6 +16,11 @@ class MainDbViewModel(
     private var _thoughtById: MutableLiveData<Thought?> = MutableLiveData<Thought?>()
     val thoughtById: LiveData<Thought?>
         get() = _thoughtById
+
+    private var _MessageByThoughtId: MutableLiveData<List<Message>?> = MutableLiveData<List<Message>?>()
+    val messageByThoughtId: LiveData<List<Message>?>
+        get() = _MessageByThoughtId
+
 
     fun saveThought(vararg thought: Thought) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -54,6 +60,18 @@ class MainDbViewModel(
     fun observeMessage(): LiveData<List<Message>> = mainDbRepository.observeMessages()
 
     fun observeMessageByThoughtId(id: Long): LiveData<List<Message>> = mainDbRepository.observeMessagesByThoughtId(id)
+
+    fun observeMessageByThoughtIdOnThoughtById(): LiveData<List<Message>> {
+        return Transformations.switchMap (thoughtById)
+        {
+            it?.let {
+                viewModelScope.launch(Dispatchers.IO) {
+                    _MessageByThoughtId.postValue(mainDbRepository.queryMessagesByThoughtId(it.id))
+                }
+            }
+            messageByThoughtId
+        }
+    }
 
     fun observeFirstMessagesByThoughtId(): LiveData<List<Message>> = mainDbRepository.observeFirstMessagesByThoughtId()
 

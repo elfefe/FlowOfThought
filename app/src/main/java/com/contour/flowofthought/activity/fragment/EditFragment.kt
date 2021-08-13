@@ -2,7 +2,6 @@ package com.contour.flowofthought.activity.fragment
 
 import android.net.Uri
 import android.os.Bundle
-import android.text.Html
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -42,10 +41,8 @@ import androidx.constraintlayout.compose.ConstrainedLayoutReference
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintLayoutScope
 import androidx.constraintlayout.compose.Dimension
-import androidx.core.view.marginBottom
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
-import com.bumptech.glide.Glide
 import com.contour.flowofthought.R
 import com.contour.flowofthought.activity.MainActivity
 import com.contour.flowofthought.custom.*
@@ -58,7 +55,6 @@ import com.contour.flowofthought.mvvm.ViewModelFactory
 import com.contour.flowofthought.mvvm.viewmodel.MainDbViewModel
 import com.contour.flowofthought.custom.theme.*
 import com.contour.richtext.RichEditText
-import com.contour.richtext.img.GlideImageGeter
 import com.contour.richtext.parser.HtmlParser
 import org.joda.time.DateTime
 
@@ -117,12 +113,13 @@ class EditFragment : Fragment() {
                     thought?.let {
                         this@EditFragment.thought = it
                     }?: mainDbViewModel.saveThought(this@EditFragment.thought)
+                }
 
-                    mainDbViewModel
-                        .observeMessageByThoughtId(this@EditFragment.thought.id)
-                        .observe(viewLifecycleOwner) {
-                            addToMessagesState(it)
-                        }
+            mainDbViewModel
+                .observeMessageByThoughtIdOnThoughtById()
+                .observe(viewLifecycleOwner) {
+                    currentMessage = null
+                    addToMessagesState(it)
                 }
         }
 
@@ -162,16 +159,15 @@ class EditFragment : Fragment() {
                 buttonNewThought
             ) = createRefs()
 
-            Edit(messagesState,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .constrainAs(edit) {
-                        top.linkTo(anchor = parent.top)
-                        bottom.linkTo(anchor = markdown.top)
-                        start.linkTo(anchor = parent.start)
-                        end.linkTo(anchor = parent.end)
-                        height = Dimension.fillToConstraints
-                    }
+            Edit(modifier = Modifier
+                .fillMaxWidth()
+                .constrainAs(edit) {
+                    top.linkTo(anchor = parent.top)
+                    bottom.linkTo(anchor = markdown.top)
+                    start.linkTo(anchor = parent.start)
+                    end.linkTo(anchor = parent.end)
+                    height = Dimension.fillToConstraints
+                }
             )
 
             Markdown(
@@ -196,7 +192,6 @@ class EditFragment : Fragment() {
 
     @Composable
     fun Edit(
-        messages: List<Message>,
         modifier: Modifier = Modifier
     ) {
         LazyColumn(
@@ -204,7 +199,8 @@ class EditFragment : Fragment() {
             verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Bottom),
             contentPadding = PaddingValues(8.dp, 4.dp)
         ) {
-            items(items = messages) { message ->
+            items(items = messagesState) { message ->
+                log("Item ${messagesState.indexOf(message)}: $message")
                 AndroidView(
                     {
                         FotEditText(requireContext()).apply {
@@ -213,14 +209,23 @@ class EditFragment : Fragment() {
                             fromHtml(message.text)
 
                             onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
-                                if (hasFocus)
+                                if (hasFocus) {
                                     currentMessage = message
+                                    currentEditText = this
+                                }
                             }
 
                             doAfterTextChanged { text ->
                                 message.text = HtmlParser.toHtml(text)
 
-//                                log(message.text)
+                                messagesState.run {
+                                    if (isEmpty())
+                                        mainDbViewModel.saveThought(thought)
+
+                                    val filteredMessages = filter { it.id == message.id }
+                                    if (filteredMessages.isNotEmpty())
+                                        set(indexOf(filteredMessages[0]), message)
+                                }
 
                                 mainDbViewModel.run {
                                     saveMessage(message)
@@ -437,8 +442,6 @@ class EditFragment : Fragment() {
                     onClick = {
                         val message = Message(DateTime.now().millis, thought.id, "")
                         messagesState.run {
-                            if (isEmpty())
-                                mainDbViewModel.saveThought(thought)
                             add(message)
                         }
                         arguments?.putLong(THOUGHT_KEY, thought.id)
@@ -480,9 +483,7 @@ class EditFragment : Fragment() {
                 IconButton(
                     onClick = {
                         currentMessage?.let {
-                            messagesState.run {
-                                removeAt(indexOf(currentMessage))
-                            }
+                            removeMessageState(it)
                             mainDbViewModel.removeMessage(it)
                         }
                     },
@@ -540,5 +541,10 @@ class EditFragment : Fragment() {
         messagesState.addAll(messages)
         messagesState.addAll(empty)
         messagesState.sortBy { it.id }
+    }
+
+    private fun removeMessageState(message: Message) {
+        currentEditText?.clearFocus()
+        messagesState.remove(message)
     }
 }

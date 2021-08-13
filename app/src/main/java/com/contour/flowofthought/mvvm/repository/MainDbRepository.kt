@@ -32,6 +32,8 @@ class MainDbRepository {
 
     fun observeMessages() = MainDb.messageDao().getLiveAll()
 
+    fun queryMessagesByThoughtId(id: Long) = MainDb.messageDao().getAllByThoughtId(id)
+
     fun observeMessagesByThoughtId(id: Long) = MainDb.messageDao().getLiveAllByThoughtId(id)
 
     fun observeFirstMessagesByThoughtId() = MainDb.messageDao().getLiveFirstByThoughtId()
