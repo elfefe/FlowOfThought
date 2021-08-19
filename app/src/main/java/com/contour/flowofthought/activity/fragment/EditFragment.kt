@@ -112,7 +112,7 @@ class EditFragment : Fragment() {
                 .observe(viewLifecycleOwner) { thought ->
                     thought?.let {
                         this@EditFragment.thought = it
-                    }?: mainDbViewModel.saveThought(this@EditFragment.thought)
+                    } ?: mainDbViewModel.saveThought(this@EditFragment.thought)
                 }
 
             mainDbViewModel
@@ -201,38 +201,28 @@ class EditFragment : Fragment() {
         ) {
             items(items = messagesState) { message ->
                 log("Item ${messagesState.indexOf(message)}: $message")
-                AndroidView(
+                FotEditText.compose(
+                    context = requireContext(),
+                    onFocus =
                     {
-                        FotEditText(requireContext()).apply {
-                            currentEditText = this
+                        currentMessage = message
+                        currentEditText = it
+                    },
+                    afterTextChange = {
+                        messagesState.run {
+                            if (isEmpty())
+                                mainDbViewModel.saveThought(thought)
 
-                            fromHtml(message.text)
+                            val filteredMessages = filter { it.id == it.id }
+                            if (filteredMessages.isNotEmpty())
+                                set(indexOf(filteredMessages[0]), it)
+                        }
 
-                            onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
-                                if (hasFocus) {
-                                    currentMessage = message
-                                    currentEditText = this
-                                }
-                            }
-
-                            doAfterTextChanged { text ->
-                                message.text = HtmlParser.toHtml(text)
-
-                                messagesState.run {
-                                    if (isEmpty())
-                                        mainDbViewModel.saveThought(thought)
-
-                                    val filteredMessages = filter { it.id == message.id }
-                                    if (filteredMessages.isNotEmpty())
-                                        set(indexOf(filteredMessages[0]), message)
-                                }
-
-                                mainDbViewModel.run {
-                                    saveMessage(message)
-                                }
-                            }
+                        mainDbViewModel.run {
+                            saveMessage(it)
                         }
                     },
+                    message = message,
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(Color.Transparent)
